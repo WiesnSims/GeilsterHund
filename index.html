@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gem Guardian - Roguelite Tower Defense Survival</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Press+Start+2P&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- In-Game HUD -->
+    <div id="hud" class="overlay-ui">
+      <div class="hud-top">
+        <div class="stat-badge gem-badge">
+          <div class="icon">💎</div>
+          <div class="bar-container">
+            <div class="label-row">
+              <span class="label">CRYSTAL CORE</span>
+              <span id="gemHpText" class="val">1000 / 1000</span>
+            </div>
+            <div class="bar"><div id="gemHpBar" class="bar-fill hp-gem"></div></div>
+          </div>
+        </div>
+
+        <div class="wave-display">
+          <div class="wave-title">WAVE <span id="waveNumber">1</span></div>
+          <div id="waveStatus" class="wave-sub">Incoming Horde...</div>
+          <div class="wave-progress-bar"><div id="waveProgressBar" class="wave-progress-fill"></div></div>
+        </div>
+
+        <div class="stat-badge player-badge">
+          <div class="icon">🛡️</div>
+          <div class="bar-container">
+            <div class="label-row">
+              <span class="label">PLAYER HP</span>
+              <span id="playerHpText" class="val">100 / 100</span>
+            </div>
+            <div class="bar"><div id="playerHpBar" class="bar-fill hp-player"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-top-sub">
+        <div class="resource-badge">
+          <span class="icon">✨</span>
+          <span class="res-label">ESSENCE:</span>
+          <span id="scoreText" class="res-val">0</span>
+        </div>
+        <div class="resource-badge">
+          <span class="icon">⭐</span>
+          <span class="res-label">LVL:</span>
+          <span id="playerLvlText" class="res-val">1</span>
+          <div class="xp-bar-mini"><div id="xpBarFill" class="xp-fill"></div></div>
+        </div>
+        <div class="resource-badge">
+          <span class="icon">💀</span>
+          <span class="res-label">KILLS:</span>
+          <span id="killCountText" class="res-val">0</span>
+        </div>
+      </div>
+
+      <!-- Quick Weapon Bar / Skills -->
+      <div class="hud-bottom">
+        <div class="weapon-slots" id="weaponSlots">
+          <!-- Weapon icons rendered here -->
+        </div>
+        <div class="ability-slot" id="dashSlot">
+          <div class="ability-key">SPACE</div>
+          <div class="ability-name">DASH</div>
+          <div class="ability-cd" id="dashCdOverlay"></div>
+        </div>
+        <div class="ability-slot" id="shockwaveSlot">
+          <div class="ability-key">Q</div>
+          <div class="ability-name">NOVA</div>
+          <div class="ability-cd" id="shockwaveCdOverlay"></div>
+        </div>
+      </div>
+
+      <!-- Boss health bar overlay -->
+      <div id="bossBarContainer" class="boss-bar-container hidden">
+        <div class="boss-name" id="bossName">ANCIENT LICH KING</div>
+        <div class="boss-bar"><div id="bossHpBar" class="boss-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- Start / Title Screen -->
+    <div id="startScreen" class="menu-modal">
+      <div class="modal-box">
+        <div class="title-gem-glow">💎</div>
+        <h1 class="game-title">GEM GUARDIAN</h1>
+        <p class="subtitle">Roguelike Horde Defense</p>
+        <p class="lore">
+          The <b>Arcane Heart</b> has surfaced. Dark hordes of Zombies, Crypt Ghouls, Bone Archers, and Demonic Abominations are marching to shatter it. Defend the gem at all costs, slay the monsters, harvest souls, and unlock ancient artifacts!
+        </p>
+
+        <div class="controls-guide">
+          <div class="ctrl-item"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> Movement</div>
+          <div class="ctrl-item"><span class="key">MOUSE</span> Aim</div>
+          <div class="ctrl-item"><span class="key">L-CLICK</span> / <span class="key">AUTO</span> Fire</div>
+          <div class="ctrl-item"><span class="key">SPACE</span> Dash</div>
+          <div class="ctrl-item"><span class="key">Q</span> Crystal Shockwave</div>
+          <div class="ctrl-item"><span class="key">1-4</span> Weapon Hotkeys</div>
+        </div>
+
+        <button id="btnStartGame" class="btn primary-btn">START EXPEDITION</button>
+      </div>
+    </div>
+
+    <!-- Roguelike Level Up / Card Selection Modal -->
+    <div id="upgradeModal" class="menu-modal hidden">
+      <div class="modal-box upgrade-box">
+        <h2 class="upgrade-heading">POWER ASCENSION</h2>
+        <p class="upgrade-sub">Choose a blessing from the Arcane Core to enhance your combat arts:</p>
+        <div class="cards-grid" id="upgradeCardsGrid">
+          <!-- 3 Upgrade Cards dynamically rendered -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Wave Cleared / Intermission Modal -->
+    <div id="waveClearedModal" class="banner-popup hidden">
+      <div class="banner-content">
+        <h2>WAVE COMPLETED!</h2>
+        <p>The Gem pulses with healing radiance. Prepare for the next onslaught!</p>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="menu-modal hidden">
+      <div class="modal-box gameover-box">
+        <h1 class="gameover-title" id="gameOverTitle">CORE SHATTERED</h1>
+        <p id="gameOverReason" class="gameover-reason">The crystal was devoured by the darkness.</p>
+
+        <div class="gameover-stats">
+          <div class="stat-line"><span>Waves Survived:</span> <b id="finalWaves">0</b></div>
+          <div class="stat-line"><span>Monsters Slayed:</span> <b id="finalKills">0</b></div>
+          <div class="stat-line"><span>Essence Gathered:</span> <b id="finalEssence">0</b></div>
+          <div class="stat-line"><span>Guardian Level:</span> <b id="finalLevel">1</b></div>
+        </div>
+
+        <button id="btnRestartGame" class="btn primary-btn">TRY AGAIN</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
