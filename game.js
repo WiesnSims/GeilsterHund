@@ -7,6 +7,8 @@
 class SoundManager {
   constructor() {
     this.ctx = null;
+    this.masterGain = null;
+    this.volume = 0.3;
     this.enabled = true;
   }
 
@@ -15,6 +17,9 @@ class SoundManager {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+        this.masterGain.connect(this.ctx.destination);
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
@@ -22,8 +27,15 @@ class SoundManager {
     }
   }
 
+  setVolume(val) {
+    this.volume = Math.max(0, Math.min(1, val));
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+    }
+  }
+
   playLaser(pitch = 600, duration = 0.12) {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -33,16 +45,15 @@ class SoundManager {
       gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + duration);
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       osc.start();
       osc.stop(this.ctx.currentTime + duration);
     } catch (e) {}
   }
 
   playShotgun() {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
-      // Noise burst for shotgun punch
       const bufferSize = this.ctx.sampleRate * 0.15;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const output = buffer.getChannelData(0);
@@ -62,13 +73,13 @@ class SoundManager {
 
       whiteNoise.connect(filter);
       filter.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       whiteNoise.start();
     } catch (e) {}
   }
 
   playExplosion() {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -78,14 +89,14 @@ class SoundManager {
       gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.4);
     } catch (e) {}
   }
 
   playHit() {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -95,14 +106,14 @@ class SoundManager {
       gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.08);
     } catch (e) {}
   }
 
   playGemHit() {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -112,14 +123,14 @@ class SoundManager {
       gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.25);
     } catch (e) {}
   }
 
   playLevelUp() {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
       const notes = [440, 554, 659, 880];
       notes.forEach((freq, idx) => {
@@ -130,7 +141,7 @@ class SoundManager {
         gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.08);
         gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.08 + 0.2);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(this.masterGain);
         osc.start(this.ctx.currentTime + idx * 0.08);
         osc.stop(this.ctx.currentTime + idx * 0.08 + 0.2);
       });
@@ -138,7 +149,7 @@ class SoundManager {
   }
 
   playDash() {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -148,14 +159,14 @@ class SoundManager {
       gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.15);
     } catch (e) {}
   }
 
   playNova() {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -165,14 +176,14 @@ class SoundManager {
       gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.35);
     } catch (e) {}
   }
 
   playPickup() {
-    if (!this.ctx) return;
+    if (!this.ctx || this.volume <= 0) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -182,7 +193,7 @@ class SoundManager {
       gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.06);
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.06);
     } catch (e) {}
@@ -609,6 +620,24 @@ class Game {
       sound.init();
       document.getElementById('startScreen').classList.add('hidden');
       this.startGame();
+    });
+
+    // Options Menu
+    const optionsModal = document.getElementById('optionsModal');
+    document.getElementById('btnOpenOptions').addEventListener('click', () => {
+      optionsModal.classList.remove('hidden');
+    });
+
+    document.getElementById('btnCloseOptions').addEventListener('click', () => {
+      optionsModal.classList.add('hidden');
+    });
+
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeText = document.getElementById('volumeText');
+    volumeSlider.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      sound.setVolume(val);
+      volumeText.innerText = `${Math.round(val * 100)}%`;
     });
 
     document.getElementById('btnRestartGame').addEventListener('click', () => {
